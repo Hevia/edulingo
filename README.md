@@ -1,5 +1,5 @@
 # Edulingo
-WinHacks 2020 Submission! Lightweight Flashcard CLI app.
+WinHacks 2020 Submission! Flashcards in the CLI. 
 
 [add desc.]
 
