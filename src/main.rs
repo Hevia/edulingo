@@ -1,14 +1,10 @@
 extern crate ansi_term;
 extern crate serde;
-extern crate serde_json;
 
 #[macro_use]
 extern crate serde_derive;
 
 use ansi_term::Colour;
-use serde_json::Error;
-use std::fs::File;
-use std::io::prelude::*;
 use text_io::read;
 
 #[derive(Serialize, Deserialize)]
@@ -18,8 +14,7 @@ struct Card {
     score: f32,
 }
 
-fn enter_new_card() -> Result<(), Error> {
-    let mut file = File::create("test.json").unwrap();
+fn enter_new_card() {
     // Ask user for input
     println!("{}", Colour::Blue.paint("Enter a question: "));
     let input_question: String = read!("{}\n");
@@ -33,10 +28,7 @@ fn enter_new_card() -> Result<(), Error> {
         score: 0.0,
     };
 
-    let j = serde_json::to_string(&edu_card)?;
-    println!("{}", j);
-    file.write_all(j.as_bytes()).unwrap();
-    Ok(())
+    // add it to our database
 }
 
 fn main() {
@@ -52,10 +44,10 @@ fn main() {
             "{}",
             Colour::Yellow.bold().paint("Please select an option!")
         );
-        println!("{}", Colour::Blue.paint("[!c] - Create a card"));
+        println!("{}", Colour::Green.paint("[!c] - Create a card"));
         println!("{}", Colour::Red.paint("[!s] - Study"));
-        println!("{}", Colour::Blue.paint("[!e] - Edit a card"));
-        println!("{}", Colour::Red.paint("[!q] - Quit"));
+        println!("{}", Colour::Green.paint("[!e] - Edit a card"));
+        println!("{}", Colour::Green.paint("[!q] - Quit"));
         let input_control: String = read!("{}\n");
 
         if input_control == "!c" {
