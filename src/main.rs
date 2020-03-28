@@ -11,11 +11,10 @@ use rusqlite::{Connection, Result};
 use ansi_term::Colour;
 use text_io::read;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 struct Card {
     question: String,
     answer: String,
-    score: f32,
 }
 
 fn enter_new_card(conn: &mut Connection) -> Result<()> {
@@ -23,34 +22,35 @@ fn enter_new_card(conn: &mut Connection) -> Result<()> {
     let tx = conn.transaction()?;
 
     // Ask user for input
-    loop {
-        println!("{}", Colour::Blue.paint("Enter a question: "));
-        let input_question: String = read!("{}\n");
-        println!("{}", Colour::Blue.paint("Enter the answer: "));
-        let input_answer: String = read!("{}\n");
+    println!("{}", Colour::Blue.paint("Enter a question: "));
+    let input_question: String = read!("{}\n");
+    println!("{}", Colour::Blue.paint("Enter the answer: "));
+    let input_answer: String = read!("{}\n");
 
-        // Create our card struct
-        let edu_card: Card = Card {
-            question: input_question,
-            answer: input_answer,
-            score: 0.0,
-        };
+    // add it to our database
+    tx.execute(
+        "INSERT INTO edu_cards (question, answer, score) values(?1, ?2, 0.0);",
+        &[input_question, input_answer],
+    )?;
 
-        // add it to our database
-        tx.execute()
+    tx.commit()
+}
 
-        // Ask user if they want to repeat
-        println!(
-            "{}",
-            Colour::Red.paint("Do you want to insert another card?\n [y] - yes, [n] - no")
-        );
-        let user_input = read!("{}\n");
-        if user_input != "y" {
-            break;
-        }
+fn display_cards(conn: &mut Connection) -> Result<()> {
+    let mut stmt = conn.prepare("SELECT * FROM edu_cards;")?;
+
+    let cards = stmt.query_map(NO_PARAMS, |row| {
+        Ok(Card {
+            question: row.get(1)?,
+            answer: row.get(2)?,
+        })
+    })?;
+
+    for card in cards {
+        println!("{:?}", card);
     }
 
-    tx.commit();
+    Ok(())
 }
 
 fn main() -> Result<()> {
@@ -61,7 +61,7 @@ fn main() -> Result<()> {
             .paint("=================  Welcome to Edulingo! ===================")
     );
 
-    let conn = Connection::open("edulingo.db")?;
+    let mut conn = Connection::open("edulingo.db")?;
 
     conn.execute(
         "create table if not exists edu_cards (
@@ -69,7 +69,7 @@ fn main() -> Result<()> {
              question text not null unique,
              answer text not null,
              score real not null
-         )",
+         );",
         NO_PARAMS,
     )?;
 
@@ -85,10 +85,10 @@ fn main() -> Result<()> {
         let input_control: String = read!("{}\n");
 
         if input_control == "!c" {
-            enter_new_card();
-        } else if input_control == "!q" {
-            break;
+            enter_new_card(&mut conn);
         } else if input_control == "!s" {
+            display_cards(&mut conn);
+        } else if input_control == "!q" {
             break;
         }
     }
