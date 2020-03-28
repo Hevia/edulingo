@@ -1,5 +1,5 @@
 # Edulingo
-WinHacks 2020 Submission! Flashcards in the CLI. 
+WinHacks 2020 Submission!
 
 [add desc.]
 
