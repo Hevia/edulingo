@@ -18,21 +18,39 @@ struct Card {
     score: f32,
 }
 
-fn enter_new_card() {
+fn enter_new_card(conn: &mut Connection) -> Result<()> {
+    // Connect to our DB
+    let tx = conn.transaction()?;
+
     // Ask user for input
-    println!("{}", Colour::Blue.paint("Enter a question: "));
-    let input_question: String = read!("{}\n");
-    println!("{}", Colour::Blue.paint("Enter the answer: "));
-    let input_answer: String = read!("{}\n");
+    loop {
+        println!("{}", Colour::Blue.paint("Enter a question: "));
+        let input_question: String = read!("{}\n");
+        println!("{}", Colour::Blue.paint("Enter the answer: "));
+        let input_answer: String = read!("{}\n");
 
-    // Create our card struct
-    let edu_card: Card = Card {
-        question: input_question,
-        answer: input_answer,
-        score: 0.0,
-    };
+        // Create our card struct
+        let edu_card: Card = Card {
+            question: input_question,
+            answer: input_answer,
+            score: 0.0,
+        };
 
-    // add it to our database
+        // add it to our database
+        tx.execute()
+
+        // Ask user if they want to repeat
+        println!(
+            "{}",
+            Colour::Red.paint("Do you want to insert another card?\n [y] - yes, [n] - no")
+        );
+        let user_input = read!("{}\n");
+        if user_input != "y" {
+            break;
+        }
+    }
+
+    tx.commit();
 }
 
 fn main() -> Result<()> {
@@ -43,7 +61,7 @@ fn main() -> Result<()> {
             .paint("=================  Welcome to Edulingo! ===================")
     );
 
-    let _conn = Connection::open("edulingo.db")?;
+    let conn = Connection::open("edulingo.db")?;
 
     conn.execute(
         "create table if not exists edu_cards (
