@@ -53,6 +53,27 @@ fn display_cards(conn: &mut Connection) -> Result<()> {
     Ok(())
 }
 
+fn study_cards(conn: &mut Connection) -> Result<()> {
+    let mut stmt = conn.prepare("SELECT * FROM edu_cards;")?;
+
+    let cards = stmt.query_map(NO_PARAMS, |row| {
+        Ok(Card {
+            question: row.get(1)?,
+            answer: row.get(2)?,
+        })
+    })?;
+
+    for card in cards {
+        let result = card.unwrap();
+        println!("{}", result.question);
+        println!("[hit any key] - Reveal the answer");
+        let user_input: String = read!("{}\n");
+        println!("{}", result.answer);
+    }
+
+    Ok(())
+}
+
 fn main() -> Result<()> {
     println!(
         "{}",
@@ -80,13 +101,15 @@ fn main() -> Result<()> {
         );
         println!("{}", Colour::Green.paint("[!c] - Create a card"));
         println!("{}", Colour::Red.paint("[!s] - Study"));
-        println!("{}", Colour::Green.paint("[!e] - Edit a card"));
+        println!("{}", Colour::Green.paint("[!v] - View cards"));
         println!("{}", Colour::Red.paint("[!q] - Quit"));
         let input_control: String = read!("{}\n");
 
         if input_control == "!c" {
             enter_new_card(&mut conn);
         } else if input_control == "!s" {
+            study_cards(&mut conn);
+        } else if input_control == "!v" {
             display_cards(&mut conn);
         } else if input_control == "!q" {
             break;
