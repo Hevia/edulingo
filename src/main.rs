@@ -1,8 +1,12 @@
 extern crate ansi_term;
+extern crate rusqlite;
 extern crate serde;
 
 #[macro_use]
 extern crate serde_derive;
+
+use rusqlite::NO_PARAMS;
+use rusqlite::{Connection, Result};
 
 use ansi_term::Colour;
 use text_io::read;
@@ -31,13 +35,25 @@ fn enter_new_card() {
     // add it to our database
 }
 
-fn main() {
+fn main() -> Result<()> {
     println!(
         "{}",
         Colour::Green
             .bold()
             .paint("=================  Welcome to Edulingo! ===================")
     );
+
+    let _conn = Connection::open("edulingo.db")?;
+
+    conn.execute(
+        "create table if not exists edu_cards (
+             id integer primary key,
+             question text not null unique,
+             answer text not null,
+             score real not null
+         )",
+        NO_PARAMS,
+    )?;
 
     loop {
         println!(
@@ -47,7 +63,7 @@ fn main() {
         println!("{}", Colour::Green.paint("[!c] - Create a card"));
         println!("{}", Colour::Red.paint("[!s] - Study"));
         println!("{}", Colour::Green.paint("[!e] - Edit a card"));
-        println!("{}", Colour::Green.paint("[!q] - Quit"));
+        println!("{}", Colour::Red.paint("[!q] - Quit"));
         let input_control: String = read!("{}\n");
 
         if input_control == "!c" {
@@ -58,4 +74,6 @@ fn main() {
             break;
         }
     }
+
+    Ok(())
 }
